@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" id="htmlRoot">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title id="pageTitle">لوحة انطلاق اللواج</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rakkas&family=Tajawal:wght@400;500;700;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{
+    --bg-0:#111a24;
+    --bg-1:#17222f;
+    --panel:#1d2b3a;
+    --panel-line:#2c3d50;
+    --amber:#e8a33d;
+    --amber-dim:#8a642c;
+    --cream:#f3ede0;
+    --cream-dim:#b9c1ca;
+    --green:#4f9d75;
+    --green-dim:#294536;
+    --red:#c9584f;
+    --red-dim:#4a2a28;
+    --ok-bg:#294536; --ok-text:#a8dcbe;
+    --low-bg:#3a3324; --low-text:#f0d9ab;
+    --full-bg:#4a2a28; --full-text:#eab4af;
+  }
+  html[data-theme="light"]{
+    --bg-0:#eef1f4;
+    --bg-1:#ffffff;
+    --panel:#ffffff;
+    --panel-line:#d9dfe6;
+    --amber:#c07a1a;
+    --amber-dim:#e6c592;
+    --cream:#1c2733;
+    --cream-dim:#5c6b7a;
+    --green:#2f8558;
+    --green-dim:#e0f0e6;
+    --red:#b8453c;
+    --red-dim:#f7e2e0;
+    --ok-bg:#e0f0e6; --ok-text:#1f6b3f;
+    --low-bg:#fbeecb; --low-text:#8a5a10;
+    --full-bg:#f7e2e0; --full-text:#8a2e26;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(1200px 500px at 50% -10%, color-mix(in srgb, var(--bg-1) 60%, var(--bg-0)) 0%, var(--bg-0) 60%),
+      var(--bg-0);
+    color:var(--cream);
+    font-family:'Tajawal',sans-serif;
+    min-height:100vh;
+    padding:28px 16px 60px;
+    transition:background-color .2s, color .2s;
+  }
+  .wrap{max-width:920px;margin:0 auto;}
+
+  /* header */
+  header{
+    text-align:center;
+    padding-bottom:22px;
+    border-bottom:1px dashed var(--panel-line);
+    margin-bottom:26px;
+  }
+  .toolbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:18px;
+  }
+  .toolbar .side{display:flex;gap:8px;}
+  .flag-badge{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    margin-bottom:8px;
+  }
+  .flag-badge svg{
+    width:26px;height:18px;
+    border-radius:2px;
+    box-shadow:0 0 0 1px var(--panel-line);
+  }
+  .station-label{
+    font-size:13px;
+    letter-spacing:0.5px;
+    color:var(--amber);
+    margin-bottom:6px;
+  }
+  h1{
+    font-family:'Rakkas',serif;
+    font-size:44px;
+    margin:0 0 8px;
+    color:var(--cream);
+    line-height:1.3;
+  }
+  .clock{
+    font-size:15px;
+    color:var(--cream-dim);
+    direction:ltr;
+    display:inline-block;
+  }
+  .icon-toggle-btn, .lang-btn{
+    background:transparent;
+    border:1px solid var(--panel-line);
+    color:var(--cream-dim);
+    font-family:'Tajawal',sans-serif;
+    font-size:13px;
+    padding:7px 14px;
+    border-radius:6px;
+    cursor:pointer;
+    transition:border-color .15s, color .15s;
+  }
+  .icon-toggle-btn:hover, .lang-btn:hover{border-color:var(--amber);color:var(--amber);}
+  .admin-btn{
+    background:transparent;
+    border:1px solid var(--panel-line);
+    color:var(--cream-dim);
+    font-family:'Tajawal',sans-serif;
+    font-size:13px;
+    padding:7px 14px;
+    border-radius:6px;
+    cursor:pointer;
+    transition:border-color .15s, color .15s;
+  }
+  .admin-btn:hover{border-color:var(--amber);color:var(--amber);}
+
+  /* board */
+  .board-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    padding:0 6px 10px;
+    color:var(--cream-dim);
+    font-size:13px;
+    border-bottom:1px solid var(--panel-line);
+    margin-bottom:2px;
+  }
+  .row{
+    display:grid;
+    grid-template-columns: 1fr auto auto;
+    gap:14px;
+    align-items:center;
+    background:var(--panel);
+    border:1px solid var(--panel-line);
+    border-radius:10px;
+    padding:16px 18px;
+    margin-top:12px;
+  }
+  .dest{
+    font-size:22px;
+    font-weight:700;
+  }
+  .updated{
+    font-size:12px;
+    color:var(--cream-dim);
+    font-weight:400;
+    margin-top:3px;
+  }
+  .price{
+    font-size:16px;
+    color:var(--cream-dim);
+    white-space:nowrap;
+    text-align:center;
+  }
+  .price b{color:var(--amber);font-size:18px;}
+  .seats{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    min-width:92px;
+    padding:8px 14px;
+    border-radius:8px;
+    font-family:'Tajawal',sans-serif;
+  }
+  .seats .num{
+    font-size:26px;
+    font-weight:900;
+    line-height:1;
+    font-variant-numeric:tabular-nums;
+  }
+  .seats .lbl{font-size:11px;margin-top:4px;}
+  .seats.ok{background:var(--ok-bg);color:var(--ok-text);}
+  .seats.ok .num{color:var(--green);}
+  .seats.low{background:var(--low-bg);color:var(--low-text);}
+  .seats.low .num{color:var(--amber);}
+  .seats.full{background:var(--full-bg);color:var(--full-text);}
+  .seats.full .num{color:var(--red);}
+
+  .empty{
+    text-align:center;
+    padding:60px 20px;
+    color:var(--cream-dim);
+    border:1px dashed var(--panel-line);
+    border-radius:10px;
+  }
+
+  footer{
+    text-align:center;
+    margin-top:34px;
+    font-size:12px;
+    color:var(--cream-dim);
+    line-height:1.8;
+  }
+  .credit{
+    color:var(--amber);
+    font-weight:700;
+    letter-spacing:0.3px;
+  }
+
+  /* modal */
+  .overlay{
+    position:fixed;inset:0;background:rgba(10,15,20,.72);
+    display:flex;align-items:center;justify-content:center;
+    padding:20px;z-index:50;
+  }
+  .modal{
+    background:var(--panel);
+    border:1px solid var(--panel-line);
+    border-radius:12px;
+    padding:26px;
+    width:100%;max-width:460px;
+    max-height:88vh;overflow-y:auto;
+  }
+  .modal h2{
+    font-family:'Rakkas',serif;
+    margin:0 0 16px;
+    font-size:26px;
+    color:var(--amber);
+  }
+  .field{margin-bottom:14px;}
+  .field label{display:block;font-size:13px;color:var(--cream-dim);margin-bottom:6px;}
+  .field input{
+    width:100%;
+    background:var(--bg-1);
+    border:1px solid var(--panel-line);
+    color:var(--cream);
+    border-radius:7px;
+    padding:10px 12px;
+    font-family:'Tajawal',sans-serif;
+    font-size:15px;
+  }
+  .field input:focus{outline:none;border-color:var(--amber);}
+  .btn{
+    border:none;border-radius:8px;
+    padding:13px 22px;
+    font-family:'Tajawal',sans-serif;
+    font-weight:700;
+    font-size:16px;
+    cursor:pointer;
+    transition:opacity .15s;
+  }
+  .btn:hover{opacity:.85;}
+  .btn-amber{background:var(--amber);color:#241a08;}
+  .btn-ghost{background:transparent;color:var(--cream-dim);border:1px solid var(--panel-line);}
+  .btn-red{background:var(--red);color:#2a0f0d;}
+  .row-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;}
+
+  /* admin panel */
+  .admin-wrap{max-width:760px;margin:0 auto;}
+  .admin-card{
+    background:var(--panel);
+    border:1px solid var(--panel-line);
+    border-radius:10px;
+    padding:16px 18px;
+    margin-top:12px;
+  }
+  .admin-grid{
+    display:grid;
+    grid-template-columns: 2fr 1fr 1fr auto auto auto;
+    gap:12px;
+    align-items:center;
+  }
+  .admin-grid input{
+    width:100%;
+    background:var(--bg-1);
+    border:1px solid var(--panel-line);
+    color:var(--cream);
+    border-radius:8px;
+    padding:12px 12px;
+    font-family:'Tajawal',sans-serif;
+    font-size:17px;
+    font-weight:500;
+  }
+  .stepper{display:flex;align-items:center;gap:8px;}
+  .stepper button{
+    width:44px;height:44px;border-radius:8px;
+    border:1px solid var(--panel-line);
+    background:var(--bg-1);color:var(--cream);
+    font-size:22px;font-weight:700;cursor:pointer;
+  }
+  .stepper button:active{background:var(--amber);color:#241a08;}
+  .icon-btn{
+    background:transparent;border:1px solid var(--panel-line);color:var(--cream-dim);
+    cursor:pointer;font-size:17px;padding:10px;border-radius:8px;
+    width:44px;height:44px;
+  }
+  .icon-btn:hover{color:var(--red);border-color:var(--red);}
+  .top-bar{
+    display:flex;justify-content:space-between;align-items:center;
+    margin-bottom:18px;
+    flex-wrap:wrap;
+    gap:10px;
+  }
+  .top-bar h1{font-size:30px;margin:0;}
+  .save-note{
+    font-size:12px;color:var(--green);
+    height:16px;
+    margin-top:8px;
+  }
+  .flash-banner{
+    position:fixed;
+    top:18px;left:50%;
+    transform:translateX(-50%);
+    background:var(--green);
+    color:#0e2318;
+    font-weight:700;
+    font-size:15px;
+    padding:12px 26px;
+    border-radius:30px;
+    z-index:100;
+    box-shadow:0 6px 18px rgba(0,0,0,.35);
+  }
+  .settings-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px;}
+  .settings-row .field{flex:1;min-width:180px;margin-bottom:0;}
+  .add-row{margin-top:16px;text-align:center;}
+  .col-title{font-size:13px;color:var(--cream-dim);padding:0 2px;font-weight:700;}
+  .loading{text-align:center;padding:80px 10px;color:var(--cream-dim);}
+  .help-card{
+    background:var(--ok-bg);
+    border:1px solid var(--panel-line);
+    border-radius:10px;
+    padding:16px 18px;
+    margin-bottom:16px;
+    font-size:15px;
+    line-height:1.9;
+    color:var(--ok-text);
+  }
+  .help-card b{color:var(--amber);}
+  .row-label{
+    display:none;
+    font-size:12px;
+    color:var(--cream-dim);
+    margin-bottom:4px;
+  }
+  @media (max-width:640px){
+    .admin-grid{grid-template-columns:1fr;}
+    .row-label{display:block;}
+    .admin-grid .col-title{display:none;}
+  }
+</style>
+</head>
+<body>
+
+<div id="app"></div>
+
+<script>
+(function(){
+  // Supabase connection. The publishable/anon key is safe for browser use;
+  // database security is enforced by Row Level Security (RLS).
+  const SUPABASE_URL = "https://ckrifckvormkurcqeegi.supabase.co";
+  const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_Zafm63_5lpBxOWSijkD-Cw_8frC7JF8";
+  const { createClient } = supabase;
+  const db = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+
+  let config = {
+    stationName: { ar:"محطة اللواج - بن قردان", fr:"Station de louage - Ben Guerdane" },
+    cityName: { ar:"بن قردان", fr:"Ben Guerdane" }
+  };
+  let trips = [];
+  let mode = "public"; // public | pin | admin
+  let saveNote = "";
+  let loaded = false;
+  let lang = "ar"; // ar | fr
+  let theme = "dark"; // dark | light
+
+  const app = document.getElementById('app');
+
+  const STR = {
+    ar: {
+      dir:'rtl', pageTitle:'لوحة انطلاق اللواج',
+      adminEntry:'دخول المسؤول', destination:'الوجهة', priceSeats:'السعر / المقاعد',
+      ticket:'التذكرة', lastUpdate:'آخر تحديث:', now:'الآن', minAgo:n=>`منذ ${n} د`, hAgo:n=>`منذ ${n} س`,
+      full:'مكتمل', available:'مقعد متوفر', noData:'لا توجد بيانات حالياً عن اللواج المتوفر',
+      footer:'يتم تحديث المعطيات يدوياً من طرف مسؤول المحطة',
+      pinTitle:'دخول المسؤول', pinLabel:'البريد الإلكتروني', passwordLabel:'كلمة المرور', pinWrong:'بيانات الدخول غير صحيحة',
+      cancel:'إلغاء', enter:'دخول', adminPanel:'لوحة تحكم المسؤول', backPublic:'العودة للوحة العامة', logout:'تسجيل الخروج',
+      cityLabel:'اسم المدينة', stationLabel:'اسم المحطة',
+      saveSettings:'حفظ الإعدادات', price:'السعر (د.ت)', seatsAvail:'المقاعد المتوفرة',
+      addTrip:'+ إضافة وجهة جديدة', reset:'تصفير', del:'حذف',
+      savedMsg:'تم الحفظ', updatedMsg:'تم التحديث', resetMsg:'تم التصفير', settingsSavedMsg:'تم حفظ الإعدادات',
+      newDest:'وجهة جديدة', confirmDel:d=>`حذف وجهة "${d}"؟`, loading:'جارِ تحميل لوحة المحطة…',
+      currency:'د.ت',
+      helpTitle:'كيفاش تستعمل هذه الصفحة؟',
+      helpBody:'باش <b>تبدل السعر</b>: اكتب الرقم الجديد في خانة "السعر" وأضغط في أي مكان آخر، يتسجل وحدو.<br>باش <b>تزيد أو تنقص عدد المقاعد</b>: أضغط على <b>+</b> أو <b>−</b>.<br>باش <b>تزيد وجهة جديدة</b>: أضغط على الزر الأخضر تحت.<br>ما تحتاجش تعرف في الكمبيوتر، كل حاجة تتسجل وحدها فور ما تبدلها.',
+      creditText:'تصميم وتطوير: IMEN ELORF'
+    },
+    fr: {
+      dir:'ltr', pageTitle:'Tableau des départs - Louage',
+      adminEntry:'Accès admin', destination:'Destination', priceSeats:'Prix / Places',
+      ticket:'Billet', lastUpdate:'Mis à jour :', now:'à l\'instant', minAgo:n=>`il y a ${n} min`, hAgo:n=>`il y a ${n} h`,
+      full:'Complet', available:'place(s) dispo', noData:'Aucune information disponible pour le moment',
+      footer:'Les données sont mises à jour manuellement par le responsable de la station',
+      pinTitle:'Accès admin', pinLabel:'E-mail', passwordLabel:'Mot de passe', pinWrong:'Identifiants incorrects',
+      cancel:'Annuler', enter:'Entrer', adminPanel:'Panneau d\'administration', backPublic:'Retour au tableau public', logout:'Déconnexion',
+      cityLabel:'Nom de la ville', stationLabel:'Nom de la station',
+      saveSettings:'Enregistrer les réglages', price:'Prix (DT)', seatsAvail:'Places disponibles',
+      addTrip:'+ Ajouter une destination', reset:'Réinitialiser', del:'Supprimer',
+      savedMsg:'Enregistré', updatedMsg:'Mis à jour', resetMsg:'Réinitialisé', settingsSavedMsg:'Réglages enregistrés',
+      newDest:'Nouvelle destination', confirmDel:d=>`Supprimer la destination "${d}" ?`, loading:'Chargement du tableau…',
+      currency:'DT',
+      helpTitle:'Comment utiliser cette page ?',
+      helpBody:'Pour <b>changer le prix</b> : tapez le nouveau chiffre dans la case "Prix" puis cliquez ailleurs, il s\'enregistre tout seul.<br>Pour <b>augmenter ou diminuer les places</b> : cliquez sur <b>+</b> ou <b>−</b>.<br>Pour <b>ajouter une destination</b> : cliquez sur le bouton vert en bas.<br>Pas besoin de connaître l\'informatique, tout s\'enregistre automatiquement dès que vous changez quelque chose.',
+      creditText:'Conçu et développé par IMEN ELORF'
+    }
+  };
+  function t(key){ return STR[lang][key]; }
+
+  function applyDir(){
+    document.getElementById('htmlRoot').setAttribute('dir', t('dir'));
+    document.getElementById('htmlRoot').setAttribute('lang', lang);
+    document.getElementById('htmlRoot').setAttribute('data-theme', theme);
+    document.getElementById('pageTitle').textContent = t('pageTitle');
+  }
+
+  async function toggleTheme(){
+    theme = theme === 'dark' ? 'light' : 'dark';
+    render();
+    try{ localStorage.setItem('theme-pref', theme); }catch(e){}
+  }
+
+  function seatClass(n){
+    if(n <= 0) return 'full';
+    if(n <= 2) return 'low';
+    return 'ok';
+  }
+  function seatLabel(n){
+    if(n <= 0) return t('full');
+    return t('available');
+  }
+  function timeAgo(ts){
+    if(!ts) return '';
+    const diff = Math.max(0, Math.floor((Date.now()-ts)/1000));
+    if(diff < 60) return t('now');
+    const m = Math.floor(diff/60);
+    if(m < 60) return t('minAgo')(m);
+    const h = Math.floor(m/60);
+    return t('hAgo')(h);
+  }
+  function fmtClock(){
+    const d = new Date();
+    return d.toLocaleTimeString(lang === 'ar' ? 'ar-TN' : 'fr-TN', {hour:'2-digit',minute:'2-digit'});
+  }
+  function esc(s){
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  async function loadAll(){
+    try{
+      const savedTheme = localStorage.getItem('theme-pref');
+      if(savedTheme === 'dark' || savedTheme === 'light') theme = savedTheme;
+    }catch(e){}
+
+    try{
+      const { data, error } = await db.from('site_config').select('*').eq('id', 1).maybeSingle();
+      if(error) throw error;
+      if(data){
+        config.cityName = { ar: data.city_ar || config.cityName.ar, fr: data.city_fr || config.cityName.fr };
+        config.stationName = { ar: data.station_ar || config.stationName.ar, fr: data.station_fr || config.stationName.fr };
+      }
+    }catch(e){
+      console.error('Loading site config failed:', e);
+    }
+
+    try{
+      const { data, error } = await db.from('destinations').select('*').order('id', {ascending:true});
+      if(error) throw error;
+      trips = (data || []).map(dbTripToApp);
+    }catch(e){
+      console.error('Loading destinations failed:', e);
+      trips = [];
+    }
+
+    loaded = true;
+    render();
+  }
+
+  function dbTripToApp(row){
+    return {
+      id: String(row.id),
+      dest: { ar: row.name_ar || '', fr: row.name_fr || '' },
+      price: Number(row.price) || 0,
+      seats: Number(row.available_seats) || 0,
+      updated: row.updated_at ? Date.parse(row.updated_at) : Date.now()
+    };
+  }
+
+  function migrateTrip(tr){
+    if(typeof tr.dest === 'string'){
+      tr.dest = { ar: tr.dest, fr: tr.dest };
+    }
+    return tr;
+  }
+
+  function destText(tr){
+    return tr.dest[lang] || tr.dest.ar || tr.dest.fr || '';
+  }
+
+  function seedData(){
+    const now = Date.now();
+    return [
+      {id:'t1', dest:{ar:'تونس', fr:'Tunis'}, price:25, seats:4, updated: now},
+      {id:'t2', dest:{ar:'مدنين', fr:'Médenine'}, price:5, seats:6, updated: now},
+      {id:'t3', dest:{ar:'قابس', fr:'Gabès'}, price:8, seats:2, updated: now},
+      {id:'t4', dest:{ar:'صفاقس', fr:'Sfax'}, price:15, seats:0, updated: now},
+      {id:'t5', dest:{ar:'جرجيس', fr:'Zarzis'}, price:6, seats:3, updated: now},
+      {id:'t6', dest:{ar:'تطاوين', fr:'Tataouine'}, price:7, seats:1, updated: now},
+    ];
+  }
+
+  async function saveTrip(tr){
+    const id = Number(tr.id);
+    const payload = {
+      name_ar: tr.dest.ar,
+      name_fr: tr.dest.fr,
+      price: Number(tr.price) || 0,
+      available_seats: Math.max(0, Number(tr.seats) || 0),
+      updated_at: new Date().toISOString()
+    };
+    const { data, error } = await db.from('destinations').update(payload).eq('id', id).select().single();
+    if(error) throw error;
+    Object.assign(tr, dbTripToApp(data));
+  }
+
+  async function saveConfig(){
+    const payload = {
+      city_ar: config.cityName.ar,
+      city_fr: config.cityName.fr,
+      station_ar: config.stationName.ar,
+      station_fr: config.stationName.fr,
+      updated_at: new Date().toISOString()
+    };
+    const { error } = await db.from('site_config').update(payload).eq('id', 1);
+    if(error) throw error;
+  }
+
+  function flash(msg){
+    const existing = document.getElementById('flashBanner');
+    if(existing) existing.remove();
+    const el = document.createElement('div');
+    el.id = 'flashBanner';
+    el.className = 'flash-banner';
+    el.textContent = '✓ ' + msg;
+    document.body.appendChild(el);
+    setTimeout(() => { el.remove(); }, 1500);
+  }
+
+  /* ---------- render ---------- */
+  function render(){
+    if(!loaded){
+      app.innerHTML = `<div class="loading">جارِ تحميل لوحة المحطة…</div>`;
+      return;
+    }
+    if(mode === 'pin'){ renderPin(); return; }
+    if(mode === 'admin'){ renderAdmin(); return; }
+    renderPublic();
+  }
+
+  function tunisiaFlagSvg(){
+    return `<svg viewBox="0 0 3 2" xmlns="http://www.w3.org/2000/svg">
+      <rect width="3" height="2" fill="#E70013"/>
+      <circle cx="1.5" cy="1" r="0.5" fill="#fff"/>
+      <circle cx="1.5" cy="1" r="0.38" fill="#E70013"/>
+      <circle cx="1.58" cy="1" r="0.3" fill="#fff"/>
+      <polygon fill="#E70013" points="1.6,0.87 1.632,0.956 1.724,0.960 1.652,1.017 1.676,1.105 1.6,1.055 1.524,1.105 1.548,1.017 1.476,0.960 1.568,0.956"/>
+    </svg>`;
+  }
+
+  function renderPublic(){
+    applyDir();
+    const sorted = [...trips].sort((a,b)=> b.seats - a.seats);
+    app.innerHTML = `
+      <div class="wrap">
+        <header>
+          <div class="toolbar">
+            <button class="admin-btn" id="openAdmin">${t('adminEntry')}</button>
+            <div class="side">
+              <button class="icon-toggle-btn" id="toggleTheme">${theme === 'dark' ? '☀️' : '🌙'}</button>
+              <button class="lang-btn" id="toggleLang">${lang === 'ar' ? 'FR' : 'عربي'}</button>
+            </div>
+          </div>
+          <div class="flag-badge">${tunisiaFlagSvg()}<span class="station-label">${esc(config.cityName[lang] || config.cityName.ar)}</span></div>
+          <h1>${esc(config.stationName[lang] || config.stationName.ar)}</h1>
+          <div class="clock" id="clock">${fmtClock()}</div>
+        </header>
+
+        ${sorted.length ? `
+        <div class="board-head">
+          <span>${t('destination')}</span>
+          <span>${t('priceSeats')}</span>
+        </div>
+        ${sorted.map(tr => `
+          <div class="row">
+            <div>
+              <div class="dest">${esc(destText(tr))}</div>
+              <div class="updated">${t('lastUpdate')} ${timeAgo(tr.updated)}</div>
+            </div>
+            <div class="price">${t('ticket')}<br><b>${esc(tr.price)} ${t('currency')}</b></div>
+            <div class="seats ${seatClass(tr.seats)}">
+              <div class="num">${tr.seats}</div>
+              <div class="lbl">${seatLabel(tr.seats)}</div>
+            </div>
+          </div>
+        `).join('')}
+        ` : `<div class="empty">${t('noData')}</div>`}
+
+        <footer>${t('footer')}<br><span class="credit">${t('creditText')}</span></footer>
+      </div>
+    `;
+    document.getElementById('openAdmin').onclick = () => { mode='pin'; render(); };
+    document.getElementById('toggleLang').onclick = () => { lang = lang === 'ar' ? 'fr' : 'ar'; render(); };
+    document.getElementById('toggleTheme').onclick = toggleTheme;
+  }
+
+  async function renderPin(){
+    applyDir();
+    app.innerHTML = `
+      <div class="overlay">
+        <div class="modal">
+          <h2>${t('pinTitle')}</h2>
+          <div class="field">
+            <label>${t('pinLabel')}</label>
+            <input type="email" id="adminEmail" autocomplete="username" placeholder="admin@example.com" autofocus>
+          </div>
+          <div class="field">
+            <label>${t('passwordLabel')}</label>
+            <input type="password" id="adminPassword" autocomplete="current-password" placeholder="••••••••">
+          </div>
+          <div id="pinError" style="color:var(--red);font-size:13px;min-height:16px;"></div>
+          <div class="row-actions">
+            <button class="btn btn-ghost" id="cancelPin">${t('cancel')}</button>
+            <button class="btn btn-amber" id="submitPin">${t('enter')}</button>
+          </div>
+        </div>
+      </div>
+    `;
+    const email = document.getElementById('adminEmail');
+    const password = document.getElementById('adminPassword');
+    const err = document.getElementById('pinError');
+    document.getElementById('cancelPin').onclick = () => { mode='public'; render(); };
+    async function tryEnter(){
+      err.textContent = '';
+      const { data, error } = await db.auth.signInWithPassword({
+        email: email.value.trim(),
+        password: password.value
+      });
+      if(error){
+        console.error('Supabase login error:', error);
+        err.textContent = 'Supabase: ' + error.message;
+        password.value = '';
+        password.focus();
+        return;
+      }
+      console.log('Supabase login successful:', data?.user?.email || 'authenticated user');
+      mode='admin';
+      render();
+    }
+    document.getElementById('submitPin').onclick = tryEnter;
+    password.addEventListener('keydown', e => { if(e.key==='Enter') tryEnter(); });
+    email.focus();
+  }
+
+  function renderAdmin(){
+    applyDir();
+    app.innerHTML = `
+      <div class="admin-wrap">
+        <div class="top-bar">
+          <h1>${t('adminPanel')}</h1>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-ghost" id="toggleThemeAdmin">${theme === 'dark' ? '☀️' : '🌙'}</button>
+            <button class="btn btn-ghost" id="toggleLangAdmin">${lang === 'ar' ? 'FR' : 'عربي'}</button>
+            <button class="btn btn-ghost" id="backPublic">${t('backPublic')}</button>
+            <button class="btn btn-ghost" id="logoutAdmin">${t('logout')}</button>
+          </div>
+        </div>
+
+        <div class="help-card">
+          <b>${t('helpTitle')}</b><br><br>
+          ${t('helpBody')}
+        </div>
+
+        <div class="admin-card">
+          <div class="settings-row">
+            <div class="field">
+              <label>${t('cityLabel')} (AR)</label>
+              <input id="cfgCityAr" value="${esc(config.cityName.ar)}">
+            </div>
+            <div class="field">
+              <label>${t('cityLabel')} (FR)</label>
+              <input id="cfgCityFr" value="${esc(config.cityName.fr)}">
+            </div>
+          </div>
+          <div class="settings-row">
+            <div class="field">
+              <label>${t('stationLabel')} (AR)</label>
+              <input id="cfgStationAr" value="${esc(config.stationName.ar)}">
+            </div>
+            <div class="field">
+              <label>${t('stationLabel')} (FR)</label>
+              <input id="cfgStationFr" value="${esc(config.stationName.fr)}">
+            </div>
+          </div>
+          <button class="btn btn-amber" id="saveConfigBtn">${t('saveSettings')}</button>
+        </div>
+
+        <div class="admin-card">
+          <div class="admin-grid" style="margin-bottom:6px;">
+            <div class="col-title">${t('destination')} (AR / FR)</div>
+            <div class="col-title">${t('price')}</div>
+            <div class="col-title">${t('seatsAvail')}</div>
+            <div></div><div></div><div></div>
+          </div>
+          <div id="tripsList"></div>
+          <div class="add-row">
+            <button class="btn btn-ghost" id="addTrip">${t('addTrip')}</button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    const list = document.getElementById('tripsList');
+    trips.forEach(tr => {
+      const row = document.createElement('div');
+      row.className = 'admin-grid';
+      row.style.marginTop = '10px';
+      row.innerHTML = `
+        <div>
+          <div class="row-label">${t('destination')} (AR / FR)</div>
+          <div style="display:flex;gap:6px;">
+            <input data-field="destAr" placeholder="AR" value="${esc(tr.dest.ar)}">
+            <input data-field="destFr" placeholder="FR" value="${esc(tr.dest.fr)}">
+          </div>
+        </div>
+        <div>
+          <div class="row-label">${t('price')}</div>
+          <input data-field="price" type="number" min="0" value="${esc(tr.price)}">
+        </div>
+        <div>
+          <div class="row-label">${t('seatsAvail')}</div>
+          <div class="stepper">
+            <button data-act="dec">−</button>
+            <span data-field="seatsDisplay" style="min-width:24px;text-align:center;font-weight:700;">${tr.seats}</span>
+            <button data-act="inc">+</button>
+          </div>
+        </div>
+        <button class="icon-btn" data-act="reset" title="${t('reset')}">↺</button>
+        <button class="icon-btn" data-act="del" title="${t('del')}">✕</button>
+        <div></div>
+      `;
+      list.appendChild(row);
+
+      const destArInput = row.querySelector('[data-field="destAr"]');
+      const destFrInput = row.querySelector('[data-field="destFr"]');
+      const priceInput = row.querySelector('[data-field="price"]');
+      const seatsSpan = row.querySelector('[data-field="seatsDisplay"]');
+
+      destArInput.addEventListener('change', async () => {
+        tr.dest.ar = destArInput.value.trim() || tr.dest.ar;
+        tr.updated = Date.now();
+        try{ await saveTrip(tr); flash(t('savedMsg')); }catch(e){ console.error(e); flash('Erreur de sauvegarde'); }
+      });
+      destFrInput.addEventListener('change', async () => {
+        tr.dest.fr = destFrInput.value.trim() || tr.dest.fr;
+        tr.updated = Date.now();
+        try{ await saveTrip(tr); flash(t('savedMsg')); }catch(e){ console.error(e); flash('Erreur de sauvegarde'); }
+      });
+      priceInput.addEventListener('change', async () => {
+        tr.price = Math.max(0, Number(priceInput.value) || 0);
+        tr.updated = Date.now();
+        try{ await saveTrip(tr); flash(t('savedMsg')); }catch(e){ console.error(e); flash('Erreur de sauvegarde'); }
+      });
+      row.querySelector('[data-act="inc"]').onclick = async () => {
+        tr.seats += 1; tr.updated = Date.now();
+        seatsSpan.textContent = tr.seats;
+        try{ await saveTrip(tr); flash(t('updatedMsg')); }catch(e){ console.error(e); flash('Erreur de sauvegarde'); }
+      };
+      row.querySelector('[data-act="dec"]').onclick = async () => {
+        tr.seats = Math.max(0, tr.seats - 1); tr.updated = Date.now();
+        seatsSpan.textContent = tr.seats;
+        try{ await saveTrip(tr); flash(t('updatedMsg')); }catch(e){ console.error(e); flash('Erreur de sauvegarde'); }
+      };
+      row.querySelector('[data-act="reset"]').onclick = async () => {
+        tr.seats = 0; tr.updated = Date.now();
+        seatsSpan.textContent = tr.seats;
+        try{ await saveTrip(tr); flash(t('resetMsg')); }catch(e){ console.error(e); flash('Erreur de sauvegarde'); }
+      };
+      row.querySelector('[data-act="del"]').onclick = async () => {
+        if(!confirm(t('confirmDel')(destText(tr)))) return;
+        const { error } = await db.from('destinations').delete().eq('id', Number(tr.id));
+        if(error){ console.error(error); flash('Erreur de sauvegarde'); return; }
+        trips = trips.filter(x => x.id !== tr.id);
+        render();
+      };
+    });
+
+    document.getElementById('backPublic').onclick = () => { mode='public'; render(); };
+    document.getElementById('logoutAdmin').onclick = async () => { await db.auth.signOut(); mode='public'; render(); };
+    document.getElementById('toggleLangAdmin').onclick = () => { lang = lang === 'ar' ? 'fr' : 'ar'; render(); };
+    document.getElementById('toggleThemeAdmin').onclick = toggleTheme;
+    document.getElementById('addTrip').onclick = async () => {
+      const payload = {name_ar:t('newDest'), name_fr:'Nouvelle destination', price:0, available_seats:0, updated_at:new Date().toISOString()};
+      const { data, error } = await db.from('destinations').insert(payload).select().single();
+      if(error){ console.error(error); flash('Erreur de sauvegarde'); return; }
+      trips.push(dbTripToApp(data));
+      render();
+    };
+    document.getElementById('saveConfigBtn').onclick = async () => {
+      config.cityName.ar = document.getElementById('cfgCityAr').value.trim() || config.cityName.ar;
+      config.cityName.fr = document.getElementById('cfgCityFr').value.trim() || config.cityName.fr;
+      config.stationName.ar = document.getElementById('cfgStationAr').value.trim() || config.stationName.ar;
+      config.stationName.fr = document.getElementById('cfgStationFr').value.trim() || config.stationName.fr;
+      try{
+        await saveConfig();
+        flash(t('settingsSavedMsg'));
+      }catch(e){ console.error(e); flash('Erreur de sauvegarde'); }
+    };
+  }
+
+  /* clock + polling refresh for public view */
+  setInterval(() => {
+    const clockEl = document.getElementById('clock');
+    if(clockEl) clockEl.textContent = fmtClock();
+  }, 1000);
+
+  setInterval(async () => {
+    if(mode !== 'public') return;
+    try{
+      const { data, error } = await db.from('destinations').select('*').order('id', {ascending:true});
+      if(error) throw error;
+      const freshTrips = (data || []).map(dbTripToApp);
+      if(JSON.stringify(freshTrips) !== JSON.stringify(trips)){
+        trips = freshTrips;
+        const cfg = await db.from('site_config').select('*').eq('id',1).maybeSingle();
+        if(!cfg.error && cfg.data){
+          config.cityName = {ar:cfg.data.city_ar || config.cityName.ar, fr:cfg.data.city_fr || config.cityName.fr};
+          config.stationName = {ar:cfg.data.station_ar || config.stationName.ar, fr:cfg.data.station_fr || config.stationName.fr};
+        }
+        render();
+      }
+    }catch(e){ console.error('Refresh failed:', e); }
+  }, 5000);
+
+  loadAll();
+})();
+</script>
+</body>
+</html>
